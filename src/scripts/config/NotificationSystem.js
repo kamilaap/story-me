@@ -498,6 +498,13 @@ class NotificationSystem {
       });
 
       let registration = this.serviceWorkerRegistration;
+      try {
+  registration = await navigator.serviceWorker.ready;
+  console.log('✅ Service Worker is ready');
+} catch (e) {
+  console.error('❌ Gagal mendapatkan service worker:', e);
+  throw new Error("Service Worker belum siap.");
+}
 
       if (!registration) {
         console.log("Menunggu service worker ready untuk subscription...");
