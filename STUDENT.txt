@@ -1,4 +1,5 @@
 
 MAP_TILE_URL=https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
 STORY_API_BASE_URL=https://story-api.dicoding.dev/v1
+LINK_DEPLOY=https://story-me.netlify.app/
 
