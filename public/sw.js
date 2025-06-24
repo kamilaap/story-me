@@ -1,11 +1,14 @@
-importScripts("https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js");
+importScripts(
+  "https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js"
+);
 
 const CACHE_NAME = "story-me-v4";
 const RUNTIME_CACHE = "story-me-runtime-v4";
 
-workbox.setConfig({ debug: false });
+workbox.setConfig({
+  debug: false,
+});
 
-// 📄 Caching halaman HTML
 workbox.routing.registerRoute(
   ({ request }) => request.destination === "document",
   new workbox.strategies.NetworkFirst({
@@ -19,7 +22,6 @@ workbox.routing.registerRoute(
   })
 );
 
-// 🧠 Caching JS dan CSS
 workbox.routing.registerRoute(
   ({ request }) =>
     request.destination === "script" || request.destination === "style",
@@ -34,7 +36,6 @@ workbox.routing.registerRoute(
   })
 );
 
-// 🖼️ Caching gambar
 workbox.routing.registerRoute(
   ({ request }) => request.destination === "image",
   new workbox.strategies.CacheFirst({
@@ -48,7 +49,6 @@ workbox.routing.registerRoute(
   })
 );
 
-// 🔌 Caching endpoint API
 workbox.routing.registerRoute(
   new RegExp("/v1/"),
   new workbox.strategies.NetworkFirst({
@@ -62,22 +62,6 @@ workbox.routing.registerRoute(
     ],
   })
 );
-
-// 🧠 Halaman saved stories
-workbox.routing.registerRoute(
-  ({ url }) => url.pathname === "/saved-stories",
-  new workbox.strategies.NetworkFirst({
-    cacheName: "saved-stories",
-    plugins: [
-      new workbox.expiration.ExpirationPlugin({
-        maxEntries: 10,
-        maxAgeSeconds: 24 * 60 * 60,
-      }),
-    ],
-  })
-);
-
-// ❌ Kecualikan file hot-reload, socket, service worker sendiri
 workbox.routing.registerRoute(
   ({ url }) =>
     url.pathname.includes("analytics") ||
@@ -87,11 +71,11 @@ workbox.routing.registerRoute(
   new workbox.strategies.NetworkOnly()
 );
 
-// ✅ File dari public (pastikan semua ini BENAR-BENAR ADA di folder public/)
 workbox.precaching.precacheAndRoute([
   { url: "/", revision: "v4" },
   { url: "/index.html", revision: "v4" },
   { url: "/manifest.json", revision: "v4" },
+  { url: "/styles/styles.css", revision: "v4" },
   { url: "/favicon.png", revision: "v4" },
   { url: "/icons/icon-72x72.png", revision: "v4" },
   { url: "/icons/icon-96x96.png", revision: "v4" },
@@ -101,7 +85,6 @@ workbox.precaching.precacheAndRoute([
   { url: "/icons/icon-192x192.png", revision: "v4" },
   { url: "/icons/icon-384x384.png", revision: "v4" },
   { url: "/icons/icon-512x512.png", revision: "v4" },
-  { url: "/saved-stories", revision: "v4" },
   {
     url: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css",
     revision: "1",
@@ -118,7 +101,6 @@ workbox.precaching.precacheAndRoute([
   },
 ]);
 
-// 🚀 Install + Activate
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   console.log("Service Worker installed");
@@ -126,20 +108,24 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames
-          .filter(
-            (cacheName) =>
-              cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE
-          )
-          .map((cacheName) => caches.delete(cacheName))
-      )
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter(
+              (cacheName) =>
+                cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE
+            )
+            .map((cacheName) => caches.delete(cacheName))
+        );
+      })
+      .then(() => {
+        return self.clients.claim();
+      })
   );
 });
 
-// 🔔 Push Notification
 self.addEventListener("push", (event) => {
   const data = event.data?.json() || {
     title: "Story Me",
@@ -161,21 +147,25 @@ self.addEventListener("push", (event) => {
   );
 });
 
-// 📲 Handle click pada notifikasi
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   if (event.action === "view" || !event.action) {
     const urlToOpen = event.notification.data?.url || "/";
+
     event.waitUntil(
       clients
-        .matchAll({ type: "window", includeUncontrolled: true })
+        .matchAll({
+          type: "window",
+          includeUncontrolled: true,
+        })
         .then((clientList) => {
           for (const client of clientList) {
             if (client.url === urlToOpen && "focus" in client) {
               return client.focus();
             }
           }
+
           if (clients.openWindow) {
             return clients.openWindow(urlToOpen);
           }
