@@ -34,6 +34,30 @@ workbox.routing.registerRoute(
       new workbox.cacheableResponse.CacheableResponsePlugin({
         statuses: [0, 200],
       }),
+      {
+        handlerDidError: async ({ request }) => {
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match('/offline.html');
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          return new Response(
+            `<!DOCTYPE html>
+            <html>
+            <head><title>Offline</title></head>
+            <body>
+              <h1>You're offline</h1>
+              <p>Please check your internet connection and try again.</p>
+            </body>
+            </html>`,
+            {
+              status: 200,
+              statusText: "OK",
+              headers: { "Content-Type": "text/html" }
+            }
+          );
+        }
+      }
     ],
   })
 );
@@ -70,13 +94,11 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async () => {
-          console.log("Image failed to load, serving fallback");
           const fallbackImage =
             'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="transparent"/></svg>';
           return fetch(fallbackImage);
         },
         requestWillFetch: async ({ request }) => {
-          console.log("Fetching image:", request.url);
           return request;
         },
       },
@@ -101,7 +123,6 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async () => {
-          console.log("Dicoding API image failed to load");
           return new Response("", {
             status: 200,
             statusText: "OK",
@@ -129,6 +150,15 @@ workbox.routing.registerRoute(
         maxEntries: 50,
         maxAgeSeconds: 5 * 60,
       }),
+      {
+        handlerDidError: async () => {
+          return new Response(JSON.stringify({ error: "Network unavailable" }), {
+            status: 503,
+            statusText: "Service Unavailable",
+            headers: { "Content-Type": "application/json" }
+          });
+        }
+      }
     ],
   })
 );
@@ -147,11 +177,6 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async ({ request }) => {
-          console.log(
-            "Map tile unavailable, serving placeholder:",
-            request.url
-          );
-
           const svgContent = `<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
             <rect width="256" height="256" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
             <text x="128" y="128" text-anchor="middle" dominant-baseline="middle" 
@@ -191,8 +216,6 @@ try {
 }
 
 self.addEventListener("install", (event) => {
-  console.log("Service Worker installing...");
-
   event.waitUntil(
     Promise.all([
       caches.open(CACHE_NAME).then((cache) => {
@@ -203,18 +226,10 @@ self.addEventListener("install", (event) => {
       }),
       self.skipWaiting(),
     ])
-      .then(() => {
-        console.log("Service Worker installed successfully");
-      })
-      .catch((error) => {
-        console.error("Service Worker installation failed:", error);
-      })
   );
 });
 
 self.addEventListener("activate", (event) => {
-  console.log("Service Worker activating...");
-
   const cacheWhitelist = [
     CACHE_NAME,
     RUNTIME_CACHE,
@@ -230,7 +245,6 @@ self.addEventListener("activate", (event) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (!cacheWhitelist.includes(cacheName)) {
-              console.log("Deleting old cache:", cacheName);
               return caches.delete(cacheName);
             }
             return Promise.resolve();
@@ -239,12 +253,6 @@ self.addEventListener("activate", (event) => {
       }),
       self.clients.claim(),
     ])
-      .then(() => {
-        console.log("Service Worker activated successfully");
-      })
-      .catch((error) => {
-        console.error("Service Worker activation failed:", error);
-      })
   );
 });
 
@@ -255,10 +263,6 @@ self.addEventListener("fetch", (event) => {
     event.request.url.includes("moz-extension://")
   ) {
     return;
-  }
-
-  if (event.request.url.includes("tile.openstreetmap.org")) {
-    console.log("Intercepting map tile request:", event.request.url);
   }
 });
 
