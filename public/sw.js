@@ -2,8 +2,8 @@ importScripts(
   "https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js"
 );
 
-const CACHE_NAME = "story-me-v6";
-const RUNTIME_CACHE = "story-me-runtime-v6";
+const CACHE_NAME = "story-me-v7";
+const RUNTIME_CACHE = "story-me-runtime-v7";
 
 workbox.setConfig({
   debug: false,
@@ -15,7 +15,10 @@ workbox.routing.registerRoute(
     url.pathname.includes("analytics") ||
     url.pathname.includes("sockjs-node") ||
     url.pathname.includes("hot-update") ||
-    url.pathname.includes("sw.js"),
+    url.pathname.includes("sw.js") ||
+    url.pathname.includes("service-worker") ||
+    url.protocol === "chrome-extension:" ||
+    url.protocol === "moz-extension:",
   new workbox.strategies.NetworkOnly()
 );
 
@@ -27,6 +30,9 @@ workbox.routing.registerRoute(
       new workbox.expiration.ExpirationPlugin({
         maxEntries: 20,
         maxAgeSeconds: 24 * 60 * 60,
+      }),
+      new workbox.cacheableResponse.CacheableResponsePlugin({
+        statuses: [0, 200],
       }),
     ],
   })
@@ -42,6 +48,9 @@ workbox.routing.registerRoute(
         maxEntries: 50,
         maxAgeSeconds: 30 * 24 * 60 * 60,
       }),
+      new workbox.cacheableResponse.CacheableResponsePlugin({
+        statuses: [0, 200],
+      }),
     ],
   })
 );
@@ -49,7 +58,7 @@ workbox.routing.registerRoute(
 workbox.routing.registerRoute(
   ({ request }) => request.destination === "image",
   new workbox.strategies.NetworkFirst({
-    cacheName: "story-me-images-v3",
+    cacheName: "story-me-images-v4",
     networkTimeoutSeconds: 10,
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
@@ -61,8 +70,10 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async () => {
-          console.log("Image failed to load, trying fallback");
-          return null;
+          console.log("Image failed to load, serving fallback");
+          const fallbackImage =
+            'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="transparent"/></svg>';
+          return fetch(fallbackImage);
         },
         requestWillFetch: async ({ request }) => {
           console.log("Fetching image:", request.url);
@@ -78,7 +89,7 @@ workbox.routing.registerRoute(
     url.hostname === "story-api.dicoding.dev" &&
     url.pathname.includes("/images/"),
   new workbox.strategies.NetworkFirst({
-    cacheName: "dicoding-images-v1",
+    cacheName: "dicoding-images-v2",
     networkTimeoutSeconds: 15,
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
@@ -91,7 +102,11 @@ workbox.routing.registerRoute(
       {
         handlerDidError: async () => {
           console.log("Dicoding API image failed to load");
-          return new Response("", { status: 404 });
+          return new Response("", {
+            status: 200,
+            statusText: "OK",
+            headers: { "Content-Type": "image/svg+xml" },
+          });
         },
       },
     ],
@@ -100,15 +115,12 @@ workbox.routing.registerRoute(
 
 workbox.routing.registerRoute(
   ({ url }) => {
-    const baseUrl =
-      typeof CONFIG !== "undefined"
-        ? CONFIG.BASE_URL
-        : "https://story-api.dicoding.dev";
+    const baseUrl = "https://story-api.dicoding.dev";
     return url.href.includes(`${baseUrl}/v1/`);
   },
   new workbox.strategies.NetworkFirst({
-    cacheName: "story-me-api-v3",
-    networkTimeoutSeconds: 5,
+    cacheName: "story-me-api-v4",
+    networkTimeoutSeconds: 8,
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
         statuses: [0, 200],
@@ -124,7 +136,7 @@ workbox.routing.registerRoute(
 workbox.routing.registerRoute(
   ({ url }) => url.href.includes("tile.openstreetmap.org"),
   new workbox.strategies.CacheFirst({
-    cacheName: "map-tiles-v3",
+    cacheName: "map-tiles-v4",
     plugins: [
       new workbox.cacheableResponse.CacheableResponsePlugin({
         statuses: [0, 200],
@@ -140,15 +152,13 @@ workbox.routing.registerRoute(
             request.url
           );
 
-          const svgContent = `
-            <svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
-              <rect width="256" height="256" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
-              <text x="128" y="128" text-anchor="middle" dominant-baseline="middle" 
-                    font-family="Arial" font-size="14" fill="#999">Offline</text>
-              <text x="128" y="148" text-anchor="middle" dominant-baseline="middle" 
-                    font-family="Arial" font-size="10" fill="#ccc">No Connection</text>
-            </svg>
-          `;
+          const svgContent = `<svg width="256" height="256" xmlns="http://www.w3.org/2000/svg">
+            <rect width="256" height="256" fill="#f5f5f5" stroke="#ddd" stroke-width="1"/>
+            <text x="128" y="128" text-anchor="middle" dominant-baseline="middle" 
+                  font-family="Arial" font-size="14" fill="#999">Offline</text>
+            <text x="128" y="148" text-anchor="middle" dominant-baseline="middle" 
+                  font-family="Arial" font-size="10" fill="#ccc">No Connection</text>
+          </svg>`;
 
           return new Response(svgContent, {
             status: 200,
@@ -159,107 +169,104 @@ workbox.routing.registerRoute(
             },
           });
         },
-        cacheWillUpdate: async ({ response }) => {
-          return response.status === 200 ? response : null;
+        cacheWillUpdate: async ({ request, response }) => {
+          return response && response.status === 200 ? response : null;
         },
       },
     ],
   })
 );
 
-workbox.precaching.precacheAndRoute([
-  { url: "/", revision: "v6" },
-  { url: "/index.html", revision: "v6" },
-  { url: "/manifest.json", revision: "v6" },
-  { url: "/styles/styles.css", revision: "v6" },
-  { url: "/favicon.png", revision: "v6" },
-  { url: "/icons/icon-72x72.png", revision: "v6" },
-  { url: "/icons/icon-96x96.png", revision: "v6" },
-  { url: "/icons/icon-128x128.png", revision: "v6" },
-  { url: "/icons/icon-144x144.png", revision: "v6" },
-  { url: "/icons/icon-152x152.png", revision: "v6" },
-  { url: "/icons/icon-192x192.png", revision: "v6" },
-  { url: "/icons/icon-384x384.png", revision: "v6" },
-  { url: "/icons/icon-512x512.png", revision: "v6" },
-  {
-    url: "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css",
-    revision: "1",
-  },
-  { url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css", revision: "1" },
-  { url: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js", revision: "1" },
-  {
-    url: "https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.css",
-    revision: "1",
-  },
-  {
-    url: "https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.js",
-    revision: "1",
-  },
-]);
+const precacheResources = [
+  { url: "/", revision: "v7-001" },
+  { url: "/index.html", revision: "v7-001" },
+  { url: "/manifest.json", revision: "v7-001" },
+  { url: "/offline.html", revision: "v7-001" },
+];
+
+try {
+  workbox.precaching.precacheAndRoute(precacheResources);
+} catch (error) {
+  console.error("Precaching failed:", error);
+}
 
 self.addEventListener("install", (event) => {
   console.log("Service Worker installing...");
+
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        return cache
-          .addAll(["/offline.html"])
-          .catch((err) => {
-            console.log("Failed to cache offline resources:", err);
-            return Promise.resolve();
-          });
-      })
+    Promise.all([
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.add("/offline.html").catch((err) => {
+          console.warn("Failed to cache offline.html:", err);
+          return Promise.resolve();
+        });
+      }),
+      self.skipWaiting(),
+    ])
       .then(() => {
         console.log("Service Worker installed successfully");
-        self.skipWaiting();
+      })
+      .catch((error) => {
+        console.error("Service Worker installation failed:", error);
       })
   );
 });
 
 self.addEventListener("activate", (event) => {
   console.log("Service Worker activating...");
+
   const cacheWhitelist = [
     CACHE_NAME,
     RUNTIME_CACHE,
-    "map-tiles-v3",
-    "story-me-images-v3",
-    "dicoding-images-v1",
-    "story-me-api-v3",
+    "map-tiles-v4",
+    "story-me-images-v4",
+    "dicoding-images-v2",
+    "story-me-api-v4",
   ];
 
   event.waitUntil(
-    caches
-      .keys()
-      .then((cacheNames) => {
+    Promise.all([
+      caches.keys().then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
             if (!cacheWhitelist.includes(cacheName)) {
               console.log("Deleting old cache:", cacheName);
               return caches.delete(cacheName);
             }
+            return Promise.resolve();
           })
         );
-      })
+      }),
+      self.clients.claim(),
+    ])
       .then(() => {
         console.log("Service Worker activated successfully");
-        self.clients.claim();
+      })
+      .catch((error) => {
+        console.error("Service Worker activation failed:", error);
       })
   );
 });
 
+self.addEventListener("fetch", (event) => {
+  if (
+    !event.request.url.startsWith("http") ||
+    event.request.url.includes("chrome-extension://") ||
+    event.request.url.includes("moz-extension://")
+  ) {
+    return;
+  }
+
+  if (event.request.url.includes("tile.openstreetmap.org")) {
+    console.log("Intercepting map tile request:", event.request.url);
+  }
+});
+
 self.addEventListener("unhandledrejection", (event) => {
-  console.log("Unhandled promise rejection in SW:", event.reason);
+  console.warn("Unhandled promise rejection in SW:", event.reason);
   event.preventDefault();
 });
 
-self.addEventListener("fetch", (event) => {
-  if (
-    !event.request.url.includes("chrome-extension://") &&
-    !event.request.url.includes("moz-extension://")
-  ) {
-    if (event.request.url.includes("tile.openstreetmap.org")) {
-      console.log("Intercepting map tile request:", event.request.url);
-    }
-  }
+self.addEventListener("error", (event) => {
+  console.error("Service Worker error:", event.error);
 });
