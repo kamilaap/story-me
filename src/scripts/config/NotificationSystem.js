@@ -109,8 +109,8 @@ class NotificationSystem {
                 let notificationData = {
                     title: 'Story Me',
                     body: 'Ada update baru!',
-                    icon: '/public/favicon.png',
-                    badge: '/public/favicon.png',
+                    icon: '/favicon.png',
+                    badge: '/favicon.png',
                     tag: 'story-notification',
                     requireInteraction: false
                 };
@@ -750,8 +750,8 @@ class NotificationSystem {
   showLocalNotification(title, body, options = {}) {
     if (Notification.permission === "granted") {
       const defaultOptions = {
-        icon: "/public/favicon.png",
-        badge: "/public/favicon.png",
+        icon: "/favicon.png",
+        badge: "/favicon.png",
         tag: "story-notification",
         requireInteraction: false,
         ...options,
