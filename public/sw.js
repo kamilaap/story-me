@@ -36,11 +36,16 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async ({ request }) => {
-          const cache = await caches.open(CACHE_NAME);
-          const cachedResponse = await cache.match('/offline.html');
-          if (cachedResponse) {
-            return cachedResponse;
+          try {
+            const cache = await caches.open(CACHE_NAME);
+            const cachedResponse = await cache.match('/offline.html');
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+          } catch (error) {
+            console.warn("Failed to access cache:", error);
           }
+          
           return new Response(
             `<!DOCTYPE html>
             <html>
@@ -96,7 +101,10 @@ workbox.routing.registerRoute(
         handlerDidError: async () => {
           const fallbackImage =
             'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="transparent"/></svg>';
-          return fetch(fallbackImage);
+          return new Response(fallbackImage, {
+            status: 200,
+            headers: { "Content-Type": "image/svg+xml" }
+          });
         },
         requestWillFetch: async ({ request }) => {
           return request;
@@ -201,19 +209,6 @@ workbox.routing.registerRoute(
     ],
   })
 );
-
-const precacheResources = [
-  { url: "/", revision: "v7-001" },
-  { url: "/index.html", revision: "v7-001" },
-  { url: "/manifest.json", revision: "v7-001" },
-  { url: "/offline.html", revision: "v7-001" },
-];
-
-try {
-  workbox.precaching.precacheAndRoute(precacheResources);
-} catch (error) {
-  console.error("Precaching failed:", error);
-}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
