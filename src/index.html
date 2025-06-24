@@ -144,22 +144,35 @@
     </div>
 
     <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registration successful');
-                        
-                        if (window.matchMedia('(display-mode: standalone)').matches || 
-                            window.navigator.standalone === true) {
-                            console.log('Launched as PWA');
-                        }
-                    })
-                    .catch(err => {
-                        console.log('ServiceWorker registration failed: ', err);
-                    });
-            });
+      if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('ServiceWorker registration successful with scope:', registration.scope);
+        
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          console.log('New service worker found:', newWorker.state);
+          
+          newWorker.addEventListener('statechange', () => {
+            console.log('Service worker state changed:', newWorker.state);
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('New content is available; please refresh.');
+            }
+          });
+        });
+        
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+          console.log('Launched as PWA');
         }
+      })
+      .catch(err => {
+        console.error('ServiceWorker registration failed:', err);
+        showToast('Aplikasi mungkin tidak bekerja optimal offline. Periksa koneksi internet Anda.');
+      });
+  });
+}
         let deferredPrompt;
         const installContainer = document.getElementById('installContainer');
         const installButton = document.getElementById('installButton');

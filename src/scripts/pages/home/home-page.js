@@ -5,10 +5,13 @@ import Utils from "../../utils/index.js";
 const Home = {
   async render() {
     return `
-      <div class="home-container">
+     <div class="home-container">
         <h1 class="welcome-title">Welcome to Your Story!</h1>
-        <p style="text-align: center; color: #8b5a8c; font-size: 1.2rem; margin-bottom: 2rem;">
+        <p style="text-align: center; color: #8b5a8c; font-size: 1.2rem; margin-bottom: 1rem;">
           Bagikan cerita Anda dan jelajahi cerita menarik dari komunitas Dicoding
+        </p>
+        <p style="text-align: center; color: #ff4444; font-size: 1.4rem; font-weight: bold; margin-bottom: 2rem; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);">
+          Tapi login dulu ya kalo mau liat cerita! 🔐
         </p>
         
         <div class="story-controls">
@@ -19,23 +22,102 @@ const Home = {
         <div id="map-container" style="display: none;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin: 2rem 0 1rem 0;">
             <h2 style="color: #8b5a8c; margin: 0;">📍 Lokasi Cerita</h2>
-            <div class="map-controls" style="display: flex; gap: 10px; align-items: center;">
-              <select id="layer-selector" style="
-                padding: 8px 12px;
-                border: 2px solid #b794b8;
-                border-radius: 20px;
+            <div class="map-controls" style="display: flex; gap: 15px; align-items: center;">
+              <!-- Layer Selection with Radio Buttons -->
+              <div class="layer-selector-container" style="
                 background: white;
-                color: #8b5a8c;
-                font-size: 0.9rem;
-                cursor: pointer;
-                outline: none;
+                border: 2px solid #b794b8;
+                border-radius: 25px;
+                padding: 8px 12px;
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                box-shadow: 0 2px 8px rgba(139, 90, 140, 0.1);
               ">
-                <option value="openstreetmap">🗺️ OpenStreetMap</option>
-                <option value="satellite">🛰️ Satellite</option>
-                <option value="terrain">🏔️ Terrain</option>
-                <option value="dark">🌙 Dark Mode</option>
-                <option value="light">☀️ Light Mode</option>
-              </select>
+                <div style="
+                  display: flex;
+                  gap: 8px;
+                  align-items: center;
+                  flex-wrap: wrap;
+                ">
+                  <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    color: #8b5a8c;
+                    font-weight: 500;
+                  ">
+                    <input type="radio" name="mapLayer" value="openstreetmap" checked style="
+                      margin: 0;
+                      accent-color: #8b5a8c;
+                    ">
+                    <span>🗺️ OpenStreetMap</span>
+                  </label>
+                  <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    color: #8b5a8c;
+                    font-weight: 500;
+                  ">
+                    <input type="radio" name="mapLayer" value="satellite" style="
+                      margin: 0;
+                      accent-color: #8b5a8c;
+                    ">
+                    <span>🛰️ Satellite</span>
+                  </label>
+                  <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    color: #8b5a8c;
+                    font-weight: 500;
+                  ">
+                    <input type="radio" name="mapLayer" value="terrain" style="
+                      margin: 0;
+                      accent-color: #8b5a8c;
+                    ">
+                    <span>🏔️ Terrain</span>
+                  </label>
+                  <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    color: #8b5a8c;
+                    font-weight: 500;
+                  ">
+                    <input type="radio" name="mapLayer" value="dark" style="
+                      margin: 0;
+                      accent-color: #8b5a8c;
+                    ">
+                    <span>🌙 Dark</span>
+                  </label>
+                  <label style="
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    cursor: pointer;
+                    font-size: 0.85rem;
+                    color: #8b5a8c;
+                    font-weight: 500;
+                  ">
+                    <input type="radio" name="mapLayer" value="light" style="
+                      margin: 0;
+                      accent-color: #8b5a8c;
+                    ">
+                    <span>☀️ Light</span>
+                  </label>
+                </div>
+              </div>
+              
               <button id="fullscreen-btn" style="
                 padding: 8px 12px;
                 border: 2px solid #b794b8;
@@ -45,6 +127,8 @@ const Home = {
                 cursor: pointer;
                 outline: none;
                 font-size: 1rem;
+                box-shadow: 0 2px 8px rgba(139, 90, 140, 0.1);
+                transition: all 0.3s ease;
               ">⛶</button>
               <button id="reset-view-btn" style="
                 padding: 8px 12px;
@@ -55,24 +139,41 @@ const Home = {
                 cursor: pointer;
                 outline: none;
                 font-size: 1rem;
+                box-shadow: 0 2px 8px rgba(139, 90, 140, 0.1);
+                transition: all 0.3s ease;
               ">🏠</button>
+              <button id="locate-me-btn" style="
+                padding: 8px 12px;
+                border: 2px solid #b794b8;
+                border-radius: 50%;
+                background: white;
+                color: #8b5a8c;
+                cursor: pointer;
+                outline: none;
+                font-size: 1rem;
+                box-shadow: 0 2px 8px rgba(139, 90, 140, 0.1);
+                transition: all 0.3s ease;
+              ">📍</button>
             </div>
           </div>
           <div id="stories-map" style="
             height: 400px; 
             width: 100%; 
             border-radius: 15px; 
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 8px 32px rgba(139, 90, 140, 0.15);
             position: relative;
+            border: 1px solid rgba(139, 90, 140, 0.2);
           "></div>
           <div id="map-legend" style="
             margin-top: 1rem;
-            padding: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 10px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
             font-size: 0.9rem;
             color: #8b5a8c;
             text-align: center;
+            box-shadow: 0 2px 8px rgba(139, 90, 140, 0.1);
+            border: 1px solid rgba(139, 90, 140, 0.1);
           ">
             📍 Klik marker untuk melihat detail cerita • 🔍 Gunakan scroll untuk zoom • 🖱️ Drag untuk navigasi
           </div>
@@ -84,6 +185,48 @@ const Home = {
           </div>
         </div>
       </div>
+
+      <style>
+        .map-controls button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(139, 90, 140, 0.2) !important;
+          background: #f8f9fa !important;
+        }
+
+        .layer-selector-container label:hover {
+          background: rgba(139, 90, 140, 0.1);
+          border-radius: 12px;
+          padding: 4px 6px;
+        }
+
+        .layer-selector-container input[type="radio"]:checked + span {
+          font-weight: 600;
+          color: #744a75;
+        }
+
+        @media (max-width: 768px) {
+          .map-controls {
+            flex-direction: column !important;
+            gap: 10px !important;
+          }
+          
+          .layer-selector-container {
+            flex-direction: column !important;
+            padding: 10px !important;
+          }
+          
+          .layer-selector-container > div {
+            flex-direction: column !important;
+            gap: 8px !important;
+          }
+          
+          .layer-selector-container label {
+            justify-content: flex-start !important;
+            width: 100%;
+            padding: 6px 8px !important;
+          }
+        }
+      </style>
     `;
   },
 
@@ -96,9 +239,10 @@ const Home = {
 
   _initializeEventListeners(presenter) {
     const loadStoriesBtn = document.getElementById("load-stories-btn");
-    const layerSelector = document.getElementById("layer-selector");
+    const layerRadios = document.querySelectorAll('input[name="mapLayer"]');
     const fullscreenBtn = document.getElementById("fullscreen-btn");
     const resetViewBtn = document.getElementById("reset-view-btn");
+    const locateMeBtn = document.getElementById("locate-me-btn");
 
     if (loadStoriesBtn) {
       loadStoriesBtn.addEventListener("click", async (e) => {
@@ -107,18 +251,24 @@ const Home = {
       });
     }
 
-    if (layerSelector) {
-      const savedLayer =
-        window.MapUtils?.getLayerPreference() || "openstreetmap";
-      layerSelector.value = savedLayer;
-
-      layerSelector.addEventListener("change", (e) => {
-        const selectedLayer = e.target.value;
-        this._changeMapLayer(selectedLayer);
-        if (window.MapUtils) {
-          window.MapUtils.saveLayerPreference(selectedLayer);
+    layerRadios.forEach((radio) => {
+      radio.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          const selectedLayer = e.target.value;
+          this._changeMapLayer(selectedLayer);
+          if (window.MapUtils) {
+            window.MapUtils.saveLayerPreference(selectedLayer);
+          }
         }
       });
+    });
+
+    const savedLayer = window.MapUtils?.getLayerPreference() || "openstreetmap";
+    const savedRadio = document.querySelector(
+      `input[name="mapLayer"][value="${savedLayer}"]`
+    );
+    if (savedRadio) {
+      savedRadio.checked = true;
     }
 
     if (fullscreenBtn) {
@@ -130,6 +280,12 @@ const Home = {
     if (resetViewBtn) {
       resetViewBtn.addEventListener("click", () => {
         this._resetMapView();
+      });
+    }
+
+    if (locateMeBtn) {
+      locateMeBtn.addEventListener("click", () => {
+        this._locateMe();
       });
     }
   },
@@ -263,26 +419,32 @@ const Home = {
     }
 
     if (!this.map) {
-      const defaultCenter = window.CONFIG?.MAP?.DEFAULT_CENTER || [
-        -2.5489, 118.0149,
-      ];
-      const defaultZoom = window.CONFIG?.MAP?.DEFAULT_ZOOM || 5;
+      const defaultCenter = [-6.2088, 106.8456];
+      const defaultZoom = 10;
 
       this.map = L.map("stories-map", {
-        zoomControl: window.CONFIG?.MAP?.CONTROLS?.zoomControl !== false,
-        attributionControl:
-          window.CONFIG?.MAP?.CONTROLS?.attributionControl !== false,
-        zoomAnimation: window.CONFIG?.MAP?.ANIMATION?.zoomAnimation !== false,
-        fadeAnimation: window.CONFIG?.MAP?.ANIMATION?.fadeAnimation !== false,
-        markerZoomAnimation:
-          window.CONFIG?.MAP?.ANIMATION?.markerZoomAnimation !== false,
+        zoomControl: true,
+        attributionControl: true,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true,
+        doubleClickZoom: true,
+        scrollWheelZoom: true,
+        touchZoom: true,
+        boxZoom: true,
+        keyboard: true,
+        dragging: true,
       }).setView(defaultCenter, defaultZoom);
 
       this._initializeMapLayers();
 
-      if (window.CONFIG?.MAP?.CONTROLS?.scaleControl) {
-        L.control.scale().addTo(this.map);
-      }
+      L.control
+        .scale({
+          position: "bottomleft",
+          metric: true,
+          imperial: false,
+        })
+        .addTo(this.map);
 
       this.originalBounds = this.map.getBounds();
       this.originalZoom = defaultZoom;
@@ -304,18 +466,53 @@ const Home = {
         const customIcon = window.MapUtils.createCustomMarker(story);
         marker = L.marker([story.lat, story.lon], { icon: customIcon });
       } else {
-        marker = L.marker([story.lat, story.lon]);
+        const customIcon = L.divIcon({
+          className: "custom-story-marker",
+          html: `
+            <div style="
+              background: #8b5a8c;
+              color: white;
+              border: 3px solid white;
+              border-radius: 50%;
+              width: 30px;
+              height: 30px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 14px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            ">📖</div>
+          `,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+          popupAnchor: [0, -15],
+        });
+        marker = L.marker([story.lat, story.lon], { icon: customIcon });
       }
 
       const popupContent =
         window.MapUtils &&
         typeof window.MapUtils.createPopupContent === "function"
           ? window.MapUtils.createPopupContent(story)
-          : this._createBasicPopupContent(story);
+          : this._createEnhancedPopupContent(story);
 
       marker.bindPopup(popupContent, {
         maxWidth: 300,
+        minWidth: 250,
         className: "custom-popup",
+        autoClose: false,
+        closeOnClick: false,
+      });
+
+      marker.on("popupopen", () => {
+        const popupDetailBtn = document.querySelector(
+          `.popup-detail-btn[data-story-id="${story.id}"]`
+        );
+        if (popupDetailBtn) {
+          popupDetailBtn.addEventListener("click", () => {
+            window.location.hash = `#/detail-story?id=${story.id}`;
+          });
+        }
       });
 
       this.markersGroup.addLayer(marker);
@@ -323,25 +520,78 @@ const Home = {
 
     if (storiesWithLocation.length > 0) {
       const group = new L.featureGroup(this.markersGroup.getLayers());
-      this.map.fitBounds(group.getBounds().pad(0.1));
+      const bounds = group.getBounds();
+
+      const minZoom = 8;
+      const maxZoom = 16;
+
+      this.map.fitBounds(bounds.pad(0.1), {
+        minZoom: minZoom,
+        maxZoom: maxZoom,
+      });
+
+      if (storiesWithLocation.length === 1) {
+        this.map.setZoom(12);
+      }
     }
 
     this.currentStories = storiesWithLocation;
   },
 
   _initializeMapLayers() {
-    if (!window.CONFIG?.MAP?.TILE_LAYERS) return;
-
-    const tileLayers = window.CONFIG.MAP.TILE_LAYERS;
     this.mapLayers = {};
 
-    Object.keys(tileLayers).forEach((layerKey) => {
-      const layerConfig = tileLayers[layerKey];
-      this.mapLayers[layerKey] = L.tileLayer(layerConfig.url, {
-        attribution: layerConfig.attribution,
-        maxZoom: layerConfig.maxZoom || 18,
-      });
-    });
+    this.mapLayers.openstreetmap = L.tileLayer(
+      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+        minZoom: 1,
+      }
+    );
+
+    this.mapLayers.satellite = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      {
+        attribution:
+          "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+        maxZoom: 19,
+        minZoom: 1,
+      }
+    );
+
+    this.mapLayers.terrain = L.tileLayer(
+      "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
+      {
+        attribution:
+          'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
+        maxZoom: 17,
+        minZoom: 1,
+      }
+    );
+
+    this.mapLayers.dark = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+        minZoom: 1,
+      }
+    );
+
+    this.mapLayers.light = L.tileLayer(
+      "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+      {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        subdomains: "abcd",
+        maxZoom: 19,
+        minZoom: 1,
+      }
+    );
 
     const savedLayer = window.MapUtils?.getLayerPreference() || "openstreetmap";
     if (this.mapLayers[savedLayer]) {
@@ -351,6 +601,27 @@ const Home = {
       this.mapLayers.openstreetmap.addTo(this.map);
       this.currentLayer = "openstreetmap";
     }
+  },
+
+  _setupLocateControl() {
+    if (!this.map) return;
+
+    this.locateControl = L.control.locate({
+      position: "topright",
+      strings: {
+        title: "Lokasi saya saat ini",
+        popup: "Anda berada dalam radius {distance} {unit} dari titik ini",
+        outsideMapBoundsMsg: "Anda berada di luar batas peta",
+      },
+      locateOptions: {
+        maxZoom: 16,
+        enableHighAccuracy: true,
+      },
+      icon: "locate-me-icon",
+      iconLoading: "locate-me-loading",
+    });
+
+    this.locateControl.addTo(this.map);
   },
 
   _changeMapLayer(layerKey) {
@@ -393,38 +664,164 @@ const Home = {
 
     if (this.currentStories && this.currentStories.length > 0) {
       const group = new L.featureGroup(this.markersGroup.getLayers());
-      this.map.fitBounds(group.getBounds().pad(0.1));
+      const bounds = group.getBounds();
+
+      this.map.fitBounds(bounds.pad(0.1), {
+        minZoom: 8,
+        maxZoom: 16,
+      });
+
+      if (this.currentStories.length === 1) {
+        this.map.setZoom(12);
+      }
     } else {
-      const defaultCenter = window.CONFIG?.MAP?.DEFAULT_CENTER || [
-        -2.5489, 118.0149,
-      ];
-      const defaultZoom = window.CONFIG?.MAP?.DEFAULT_ZOOM || 5;
+      const defaultCenter = [-6.2088, 106.8456];
+      const defaultZoom = 10;
       this.map.setView(defaultCenter, defaultZoom);
     }
   },
 
-  _createBasicPopupContent(story) {
+  _locateMe() {
+    if (!this.map) return;
+
+    this.map.locate({
+      setView: true,
+      maxZoom: 16,
+      enableHighAccuracy: true,
+    });
+
+    this.map.on("locationfound", (e) => {
+      const radius = e.accuracy / 2;
+
+      if (this.locationCircle) {
+        this.map.removeLayer(this.locationCircle);
+      }
+      if (this.locationMarker) {
+        this.map.removeLayer(this.locationMarker);
+      }
+
+      this.locationCircle = L.circle(e.latlng, radius, {
+        color: "#8b5a8c",
+        fillColor: "#b794b8",
+        fillOpacity: 0.2,
+        weight: 2,
+      }).addTo(this.map);
+
+      this.locationMarker = L.marker(e.latlng, {
+        icon: L.divIcon({
+          className: "user-location-marker",
+          html: `
+            <div style="
+              background: #007bff;
+              color: white;
+              border: 3px solid white;
+              border-radius: 50%;
+              width: 20px;
+              height: 20px;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            "></div>
+          `,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10],
+        }),
+      }).addTo(this.map);
+    });
+
+    this.map.on("locationerror", (e) => {
+      this.showError(
+        "Gagal mendapatkan lokasi: " +
+          e.message +
+          "\nPastikan Anda mengizinkan akses lokasi."
+      );
+    });
+  },
+
+  _createEnhancedPopupContent(story) {
     return `
-      <div style="max-width: 250px;">
+      <div style="max-width: 250px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
         <img src="${story.photoUrl}" 
              alt="Foto cerita: ${Utils.escapeHtml(story.description)}" 
-             style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px;">
-        <h4 style="margin: 0 0 5px 0; color: #8b5a8c;">👤 ${Utils.escapeHtml(
-          story.name
-        )}</h4>
-        <p style="margin: 0 0 8px 0; font-size: 0.9rem;">${Utils.truncateText(
-          Utils.escapeHtml(story.description),
-          80
-        )}</p>
-        <small style="color: #8b5a8c; display: block; margin-bottom: 8px;">📅 ${Utils.formatDate(
-          story.createdAt
-        )}</small>
-        <button onclick="window.location.hash='#/detail-story?id=${story.id}'" 
-                style="background: #b47eb1; color: white; border: none; padding: 8px 16px; border-radius: 10px; cursor: pointer; width: 100%;">
-          👁️ Detail
-        </button>
+             style="
+               width: 100%; 
+               height: 120px; 
+               object-fit: cover; 
+               border-radius: 8px; 
+               margin-bottom: 8px;
+               box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+             ">
+        <div style="padding: 0 4px;">
+          <h4 style="
+            margin: 0 0 5px 0; 
+            color: #8b5a8c; 
+            font-size: 1rem;
+            font-weight: 600;
+          ">
+            👤 ${Utils.escapeHtml(story.name)}
+          </h4>
+          <p style="
+            margin: 0 0 8px 0; 
+            font-size: 0.85rem;
+            color: #555;
+            line-height: 1.4;
+          ">
+            ${Utils.truncateText(Utils.escapeHtml(story.description), 80)}
+          </p>
+          <div style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+          ">
+            <small style="
+              color: #8b5a8c; 
+              font-size: 0.75rem;
+            ">
+              📅 ${Utils.formatDate(story.createdAt)}
+            </small>
+            <button 
+              class="popup-detail-btn"
+              data-story-id="${story.id}"
+              style="
+                background: #8b5a8c;
+                color: white;
+                border: none;
+                padding: 6px 12px;
+                border-radius: 15px;
+                cursor: pointer;
+                font-size: 0.75rem;
+                transition: all 0.2s ease;
+              "
+              onmouseover="this.style.background='#744a75'"
+              onmouseout="this.style.background='#8b5a8c'"
+            >
+              Lihat Detail
+            </button>
+          </div>
+        </div>
       </div>
     `;
+  },
+
+  destroy() {
+    if (this.map) {
+      this.map.remove();
+      this.map = null;
+    }
+
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.markersGroup = null;
+    }
+
+    if (this.markersGroup) {
+      this.markersGroup.clearLayers();
+      this.markersGroup = null;
+    }
+
+    if (this.locateControl) {
+      this.locateControl.stop();
+      this.locateControl = null;
+    }
   },
 };
 

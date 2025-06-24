@@ -83,25 +83,29 @@
       "src": "/screenshots/mobile-screenshot1.png",
       "sizes": "360x640",
       "type": "image/png",
-      "form_factor": "narrow"
+      "form_factor": "narrow",
+      "label": "Halaman Beranda Mobile"
     },
     {
       "src": "/screenshots/mobile-screenshot2.png",
       "sizes": "360x640",
       "type": "image/png",
-      "form_factor": "narrow"
-    },
-    {
-      "src": "/screenshots/desktop-screenshot1.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "narrow",
+      "label": "Halaman Detail Cerita Mobile"
     },
     {
       "src": "/screenshots/desktop-screenshot2.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Halaman Beranda Desktop"
+    },
+    {
+      "src": "/screenshots/desktop-screenshot2.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Halaman Tambah Cerita Desktop"
     }
   ]
 }

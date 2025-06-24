@@ -213,7 +213,6 @@ class StoryModel {
       });
 
       const headers = {};
-
       const tokenToUse =
         authToken || (this.isAuthenticated() ? this.getAuthToken() : null);
 
@@ -223,39 +222,96 @@ class StoryModel {
 
       const response = await fetch(
         `${this.baseUrl}${CONFIG.ENDPOINTS.STORIES}?${params}`,
-        {
-          method: "GET",
-          headers: headers,
-        }
+        { headers }
       );
+
+      if (!response.ok) throw new Error("Failed to fetch stories");
 
       const result = await response.json();
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error("Sesi telah berakhir. Silakan login kembali.");
-        }
-        throw new Error(result.message || "Gagal mengambil data cerita.");
-      }
-
-      if (result.error) {
-        throw new Error(result.message || "Gagal mengambil data cerita.");
-      }
+      this._cacheStories(result.listStory);
+      this._cacheLastStories(result.listStory.slice(0, 8));
 
       return result;
     } catch (error) {
-      console.error("Error fetching stories:", error);
+      console.warn("Online fetch failed, trying cache:", error);
 
-      if (error.name === "TypeError" && error.message.includes("fetch")) {
-        throw new Error("Koneksi bermasalah. Periksa koneksi internet Anda.");
+      const cachedStories = this._getCachedStories();
+      if (cachedStories) {
+        return {
+          error: false,
+          message: "Showing cached stories (offline mode)",
+          listStory: cachedStories,
+          isOffline: true,
+        };
       }
 
-      throw error;
+      return {
+        error: false,
+        message: "No cached stories available",
+        listStory: [],
+        isOffline: true,
+      };
+    }
+  }
+
+  _getCachedStories() {
+    try {
+      const cachedData = localStorage.getItem(
+        CONFIG.STORAGE_KEYS.OFFLINE_STORIES
+      );
+      if (!cachedData) return null;
+
+      const { stories, timestamp } = JSON.parse(cachedData);
+      const cacheAge = Date.now() - timestamp;
+
+      if (cacheAge < CONFIG.OFFLINE_CACHE_EXPIRY) {
+        return stories;
+      }
+      return null;
+    } catch (error) {
+      console.error("Failed to get cached stories:", error);
+      return null;
     }
   }
   async getAllStories(options = {}) {
-    const { page = 1, size = 100, location = 0, authToken = null } = options;
+    const { page = 1, size = 20, location = 0, authToken = null } = options;
     return await this.getStories(page, size, location, authToken);
+  }
+
+  _cacheStories(stories) {
+    try {
+      localStorage.setItem(
+        CONFIG.STORAGE_KEYS.OFFLINE_STORIES,
+        JSON.stringify({
+          stories: stories,
+          timestamp: Date.now(),
+        })
+      );
+    } catch (error) {
+      console.error("Failed to cache stories:", error);
+    }
+  }
+
+  _cacheLastStories(stories) {
+    try {
+      localStorage.setItem(
+        CONFIG.STORAGE_KEYS.LAST_STORIES,
+        JSON.stringify(stories)
+      );
+    } catch (error) {
+      console.error("Failed to cache last stories:", error);
+    }
+  }
+
+  _getLastStories() {
+    try {
+      const cached = localStorage.getItem(CONFIG.STORAGE_KEYS.LAST_STORIES);
+      return cached ? JSON.parse(cached) : null;
+    } catch (error) {
+      console.error("Failed to get cached stories:", error);
+      return null;
+    }
   }
 
   async getStoryDetail(id, authToken = null) {

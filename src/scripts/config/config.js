@@ -1,5 +1,7 @@
 const CONFIG = {
   BASE_URL: "https://story-api.dicoding.dev/v1",
+  CACHE_VERSION: "v1",
+  OFFLINE_CACHE_EXPIRY: 24 * 60 * 60 * 1000,
 
   ENDPOINTS: {
     REGISTER: "/register",
@@ -14,7 +16,8 @@ const CONFIG = {
   MAP: {
     DEFAULT_CENTER: [-6.2088, 106.8456],
     DEFAULT_ZOOM: 10,
-
+    OFFLINE_TILE_URL:
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect width='256' height='256' fill='%23f0f0f0'/%3E%3Ctext x='128' y='128' text-anchor='middle' fill='%23999' font-size='14'%3EOffline Map%3C/text%3E%3C/svg%3E",
     TILE_LAYERS: {
       openstreetmap: {
         name: "OpenStreetMap",
@@ -135,6 +138,9 @@ const CONFIG = {
     NOTIFICATION_SUBSCRIBED: "notification_subscribed",
     NOTIFICATION_SUBSCRIPTION: "notification_subscription",
     MAP_LAYER_PREFERENCE: "map_layer_preference",
+    MAP_LAYER_PREFERENCE: "map_layer_preference",
+    OFFLINE_STORIES: "offline_stories",
+    LAST_SYNC: "last_sync",
   },
 
   MAX_FILE_SIZE: 1024 * 1024,
