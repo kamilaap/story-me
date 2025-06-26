@@ -162,7 +162,6 @@
 
                     console.log('ServiceWorker registration successful with scope:', registration.scope);
 
-                    // Handle different registration states
                     if (registration.installing) {
                         console.log('Service Worker installing...');
                         handleServiceWorkerState(registration.installing);
@@ -173,7 +172,6 @@
                         console.log('Service Worker active and ready');
                     }
 
-                    // Listen for updates
                     registration.addEventListener('updatefound', () => {
                         console.log('New service worker found');
                         const newWorker = registration.installing;
@@ -183,10 +181,8 @@
                         }
                     });
 
-                    // Check if app is launched as PWA
                     checkPWAMode();
 
-                    // Check for updates periodically (every 30 minutes)
                     setInterval(() => {
                         registration.update().catch(err => {
                             console.warn('Service worker update check failed:', err);
@@ -199,7 +195,6 @@
                 }
             });
 
-            // Handle service worker state changes
             function handleServiceWorkerState(worker) {
                 worker.addEventListener('statechange', () => {
                     console.log('Service worker state changed:', worker.state);
@@ -236,7 +231,6 @@
                 });
             }
 
-            // Show update notification
             function showUpdateNotification() {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
@@ -250,28 +244,24 @@
                         cancelButtonColor: '#6c757d'
                     }).then((result) => {
                         if (result.isConfirmed) {
-                            // Force update by skipping waiting and reloading
                             navigator.serviceWorker.getRegistration().then(registration => {
                                 if (registration && registration.waiting) {
                                     registration.waiting.postMessage({ type: 'SKIP_WAITING' });
                                 }
                             });
 
-                            // Listen for controller change and reload
                             navigator.serviceWorker.addEventListener('controllerchange', () => {
                                 window.location.reload();
                             });
                         }
                     });
                 } else {
-                    // Fallback for browsers without SweetAlert
                     if (confirm('Pembaruan tersedia! Muat ulang halaman untuk mendapatkan versi terbaru?')) {
                         window.location.reload();
                     }
                 }
             }
 
-            // Handle registration errors
             function handleRegistrationError(error) {
                 let errorMessage = 'Aplikasi mungkin tidak bekerja optimal offline.';
 
@@ -292,7 +282,6 @@
                 showToast(errorMessage, 'warning');
             }
 
-            // Check if app is running as PWA
             function checkPWAMode() {
                 const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                     window.navigator.standalone === true ||
@@ -302,16 +291,13 @@
                     console.log('Launched as PWA');
                     document.body.classList.add('pwa-mode');
 
-                    // Optional: Hide browser-specific elements
                     const browserElements = document.querySelectorAll('.browser-only');
                     browserElements.forEach(el => el.style.display = 'none');
                 }
             }
 
-            // Enhanced toast function with better error handling
             function showToast(message, type = 'info', duration = 4000) {
                 try {
-                    // Try using SweetAlert toast if available
                     if (typeof Swal !== 'undefined' && Swal.mixin) {
                         const Toast = Swal.mixin({
                             toast: true,
@@ -330,7 +316,6 @@
                             title: message
                         });
                     } else {
-                        // Fallback to custom toast or console
                         createFallbackToast(message, type, duration);
                     }
                 } catch (error) {
@@ -339,14 +324,11 @@
                 }
             }
 
-            // Fallback toast for when SweetAlert is not available
             function createFallbackToast(message, type, duration) {
-                // Create toast element
                 const toast = document.createElement('div');
                 toast.className = `toast toast-${type}`;
                 toast.textContent = message;
 
-                // Style the toast
                 Object.assign(toast.style, {
                     position: 'fixed',
                     top: '20px',
@@ -366,15 +348,12 @@
                         type === 'success' ? '#27ae60' : '#3498db'
                 });
 
-                // Add to page
                 document.body.appendChild(toast);
 
-                // Animate in
                 setTimeout(() => {
                     toast.style.transform = 'translateX(0)';
                 }, 100);
 
-                // Remove after duration
                 setTimeout(() => {
                     toast.style.transform = 'translateX(100%)';
                     setTimeout(() => {
@@ -385,7 +364,6 @@
                 }, duration);
             }
 
-            // Handle page visibility changes for update checks
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) {
                     navigator.serviceWorker.getRegistration().then(registration => {
