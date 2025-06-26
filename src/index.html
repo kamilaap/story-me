@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#8b5a8c">
+    <meta name="description"
+        content="Platform berbagi cerita terbaik untuk mengekspresikan pengalaman dan momen berharga Anda">
+    <title>Story Me - Love Your Self</title>
+    <link rel="manifest" href="/manifest.json" crossorigin="use-credentials">
+    <link rel="stylesheet" href="/styles/styles.css">
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.css" />
+</head>
+
+<body>
+
+    <a href="#main-content" class="skip-link">Skip to content</a>
+
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <a href="#/home" class="logo-link">
+                    <img src="/logo-storyme.png" alt="Story Me Logo" class="logo-img" loading="eager">
+                </a>
+            </div>
+
+
+            <button class="mobile-menu-toggle" id="mobile-menu-toggle" aria-label="Toggle navigation menu">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+            <ul class="nav-menu" id="nav-menu">
+                <li><a href="#/home" class="nav-link">Home</a></li>
+                <li><a href="#/about" class="nav-link">About</a></li>
+                <li><a href="#/tambah-cerita" class="nav-link">Tambah Cerita</a></li>
+                <a href="#/saved-stories" class="nav-link">
+                    <i class="fas fa-bookmark"></i> Cerita Tersimpan
+                </a>
+                <li class="nav-notification">
+                    <button class="notification-btn" id="notification-btn" title="Notifikasi">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z" />
+                        </svg>
+                        <span class="notification-badge hidden" id="notification-badge">0</span>
+                    </button>
+                </li>
+                <li><a href="#/login" class="nav-link">Login</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main id="main-content">
+        <div id="app">
+        </div>
+    </main>
+    <div id="installContainer">
+        <p>Pasang Story Me di perangkat Anda untuk pengalaman yang lebih baik</p>
+        <button id="installButton">Pasang Sekarang</button>
+        <button id="closeInstall">Nanti</button>
+    </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h2 class="footer-title">Story Me</h2>
+                <p class="footer-description">
+                    Platform berbagi cerita terbaik untuk mengekspresikan pengalaman dan
+                    momen berharga Anda. Bergabunglah dengan komunitas pencerita dari
+                    seluruh Indonesia dan bagikan kisah inspiratif Anda.
+                </p>
+            </div>
+
+            <div class="footer-contact-section">
+                <h3 class="footer-heading">Kontak</h3>
+                <ul class="footer-contact">
+                    <li>
+                        <svg class="contact-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                            <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                        </svg>
+                        <a href="mailto:info@storyme.com">info@storyme.com</a>
+                    </li>
+                    <li>
+                        <svg class="contact-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        Jakarta, Indonesia
+                    </li>
+                    <li>
+                        <svg class="contact-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                                d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                        </svg>
+                        +62 811-2345-6789
+                    </li>
+                </ul>
+
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
+                        </svg>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987s11.987-5.367 11.987-11.987C24.014 5.367 18.647.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.596-3.197-1.536-.75-.939-1.071-2.15-1.071-3.452s.321-2.513 1.071-3.452c.749-.94 1.9-1.536 3.197-1.536s2.448.596 3.197 1.536c.75.939 1.071 2.15 1.071 3.452s-.321 2.513-1.071 3.452c-.749.94-1.9 1.536-3.197 1.536zm7.138 0c-1.297 0-2.448-.596-3.197-1.536-.75-.939-1.071-2.15-1.071-3.452s.321-2.513 1.071-3.452c.749-.94 1.9-1.536 3.197-1.536s2.448.596 3.197 1.536c.75.939 1.071 2.15 1.071 3.452s-.321 2.513-1.071 3.452c-.749.94-1.9 1.536-3.197 1.536z" />
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2024 Story Me. Semua hak cipta dilindungi.</p>
+                <p class="footer-attribution">Dibuat dengan ❤️ untuk Dicoding</p>
+            </div>
+        </div>
+    </footer>
+
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+    </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const registration = await navigator.serviceWorker.register('/sw.js', {
+                        scope: '/',
+                        updateViaCache: 'none'
+                    });
+
+                    console.log('ServiceWorker registration successful with scope:', registration.scope);
+
+                    if (registration.installing) {
+                        console.log('Service Worker installing...');
+                        handleServiceWorkerState(registration.installing);
+                    } else if (registration.waiting) {
+                        console.log('Service Worker installed, waiting to activate');
+                        showUpdateNotification();
+                    } else if (registration.active) {
+                        console.log('Service Worker active and ready');
+                    }
+
+                    registration.addEventListener('updatefound', () => {
+                        console.log('New service worker found');
+                        const newWorker = registration.installing;
+
+                        if (newWorker) {
+                            handleServiceWorkerState(newWorker);
+                        }
+                    });
+
+                    checkPWAMode();
+
+                    setInterval(() => {
+                        registration.update().catch(err => {
+                            console.warn('Service worker update check failed:', err);
+                        });
+                    }, 30 * 60 * 1000);
+
+                } catch (err) {
+                    console.error('ServiceWorker registration failed:', err);
+                    handleRegistrationError(err);
+                }
+            });
+
+            function handleServiceWorkerState(worker) {
+                worker.addEventListener('statechange', () => {
+                    console.log('Service worker state changed:', worker.state);
+
+                    switch (worker.state) {
+                        case 'installing':
+                            console.log('Service Worker installing...');
+                            showToast('Menyiapkan mode offline...', 'info');
+                            break;
+
+                        case 'installed':
+                            if (navigator.serviceWorker.controller) {
+                                console.log('New service worker installed, update available');
+                                showUpdateNotification();
+                            } else {
+                                console.log('Service Worker installed for the first time');
+                                showToast('Aplikasi siap untuk mode offline!', 'success');
+                            }
+                            break;
+
+                        case 'activating':
+                            console.log('Service Worker activating...');
+                            break;
+
+                        case 'activated':
+                            console.log('Service Worker activated');
+                            showToast('Mode offline aktif', 'success');
+                            break;
+
+                        case 'redundant':
+                            console.log('Service Worker became redundant');
+                            break;
+                    }
+                });
+            }
+
+            function showUpdateNotification() {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Pembaruan Tersedia',
+                        text: 'Versi baru aplikasi tersedia. Muat ulang untuk mendapatkan fitur terbaru?',
+                        icon: 'info',
+                        showCancelButton: true,
+                        confirmButtonText: 'Muat Ulang',
+                        cancelButtonText: 'Nanti',
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#6c757d'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            navigator.serviceWorker.getRegistration().then(registration => {
+                                if (registration && registration.waiting) {
+                                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                                }
+                            });
+
+                            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                                window.location.reload();
+                            });
+                        }
+                    });
+                } else {
+                    if (confirm('Pembaruan tersedia! Muat ulang halaman untuk mendapatkan versi terbaru?')) {
+                        window.location.reload();
+                    }
+                }
+            }
+
+            function handleRegistrationError(error) {
+                let errorMessage = 'Aplikasi mungkin tidak bekerja optimal offline.';
+
+                if (error.name === 'SecurityError') {
+                    errorMessage = 'Tidak dapat mengaktifkan mode offline karena masalah keamanan.';
+                } else if (error.name === 'TypeError') {
+                    errorMessage = 'File service worker tidak ditemukan. Mode offline tidak tersedia.';
+                } else if (error.name === 'NetworkError') {
+                    errorMessage = 'Masalah jaringan. Periksa koneksi internet Anda.';
+                }
+
+                console.error('Service Worker Error Details:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+
+                showToast(errorMessage, 'warning');
+            }
+
+            function checkPWAMode() {
+                const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                    window.navigator.standalone === true ||
+                    document.referrer.includes('android-app://');
+
+                if (isPWA) {
+                    console.log('Launched as PWA');
+                    document.body.classList.add('pwa-mode');
+
+                    const browserElements = document.querySelectorAll('.browser-only');
+                    browserElements.forEach(el => el.style.display = 'none');
+                }
+            }
+
+            function showToast(message, type = 'info', duration = 4000) {
+                try {
+                    if (typeof Swal !== 'undefined' && Swal.mixin) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: duration,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer);
+                                toast.addEventListener('mouseleave', Swal.resumeTimer);
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: type === 'warning' ? 'warning' : type === 'success' ? 'success' : 'info',
+                            title: message
+                        });
+                    } else {
+                        createFallbackToast(message, type, duration);
+                    }
+                } catch (error) {
+                    console.warn('Toast notification failed:', error);
+                    console.log(`[${type.toUpperCase()}] ${message}`);
+                }
+            }
+
+            function createFallbackToast(message, type, duration) {
+                const toast = document.createElement('div');
+                toast.className = `toast toast-${type}`;
+                toast.textContent = message;
+
+                Object.assign(toast.style, {
+                    position: 'fixed',
+                    top: '20px',
+                    right: '20px',
+                    padding: '12px 20px',
+                    borderRadius: '8px',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    zIndex: '10000',
+                    maxWidth: '350px',
+                    wordWrap: 'break-word',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    transform: 'translateX(100%)',
+                    transition: 'transform 0.3s ease-in-out',
+                    backgroundColor: type === 'warning' ? '#f39c12' :
+                        type === 'success' ? '#27ae60' : '#3498db'
+                });
+
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(0)';
+                }, 100);
+
+                setTimeout(() => {
+                    toast.style.transform = 'translateX(100%)';
+                    setTimeout(() => {
+                        if (toast.parentNode) {
+                            toast.parentNode.removeChild(toast);
+                        }
+                    }, 300);
+                }, duration);
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) {
+                    navigator.serviceWorker.getRegistration().then(registration => {
+                        if (registration) {
+                            registration.update().catch(err => {
+                                console.warn('Background service worker update failed:', err);
+                            });
+                        }
+                    });
+                }
+            });
+
+        } else {
+            console.warn('Service Worker not supported in this browser');
+            showToast('Browser Anda tidak mendukung mode offline', 'warning');
+        }
+
+        let deferredPrompt;
+        const installContainer = document.getElementById('installContainer');
+        const installButton = document.getElementById('installButton');
+        const closeInstall = document.getElementById('closeInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            if (!window.matchMedia('(display-mode: standalone)').matches &&
+                window.navigator.standalone !== true) {
+                installContainer.style.display = 'block';
+            }
+        });
+        installButton.addEventListener('click', () => {
+            installContainer.style.display = 'none';
+            deferredPrompt.prompt();
+
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted install prompt');
+                } else {
+                    console.log('User dismissed install prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        closeInstall.addEventListener('click', () => {
+            installContainer.style.display = 'none';
+        });
+        document.addEventListener('DOMContentLoaded', function () {
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const navMenu = document.getElementById('nav-menu');
+
+            mobileMenuToggle.addEventListener('click', function () {
+                navMenu.classList.toggle('nav-menu-open');
+                mobileMenuToggle.classList.toggle('active');
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    navMenu.classList.remove('nav-menu-open');
+                    mobileMenuToggle.classList.remove('active');
+                });
+            });
+
+            document.addEventListener('click', function (event) {
+                const isClickInsideNav = navMenu.contains(event.target) || mobileMenuToggle.contains(event.target);
+                if (!isClickInsideNav && navMenu.classList.contains('nav-menu-open')) {
+                    navMenu.classList.remove('nav-menu-open');
+                    mobileMenuToggle.classList.remove('active');
+                }
+            });
+        });
+    </script>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="module" src="./scripts/config/NotificationSystem.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert2/11.12.4/sweetalert2.min.js"></script>
+    <script type="module" src="./scripts/index.js"></script>
+
+</body>
+
+</html>
