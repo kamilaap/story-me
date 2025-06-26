@@ -14,7 +14,15 @@ class NotificationSystem {
     this.setupEventListeners();
     await this.registerServiceWorker();
     await this.checkNotificationSupport();
-    await this.checkSubscriptionStatus();
+
+    const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+    if (token && token !== "null") {
+      await this.checkSubscriptionStatus();
+    } else {
+      this.isSubscribed = false;
+      this.notificationCount = 0;
+    }
+
     this.updateUI();
   }
 
@@ -238,6 +246,19 @@ class NotificationSystem {
 
   async checkSubscriptionStatus() {
     try {
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      if (!token || token === "null") {
+        console.log("No valid token found, setting subscription to false");
+        this.isSubscribed = false;
+        this.notificationCount = 0;
+        localStorage.setItem("notification_count", "0");
+        localStorage.setItem(
+          CONFIG.STORAGE_KEYS.NOTIFICATION_SUBSCRIBED,
+          "false"
+        );
+        return;
+      }
+
       let registration = this.serviceWorkerRegistration;
 
       if (!registration) {
@@ -498,49 +519,24 @@ class NotificationSystem {
       });
 
       let registration = this.serviceWorkerRegistration;
-      try {
-        registration = await navigator.serviceWorker.ready;
-        console.log("✅ Service Worker is ready");
-      } catch (e) {
-        console.error("❌ Gagal mendapatkan service worker:", e);
-        throw new Error("Service Worker belum siap.");
-      }
-
       if (!registration) {
-        console.log("Menunggu service worker ready untuk subscription...");
+        console.log("Menunggu service worker ready...");
         registration = await Promise.race([
           navigator.serviceWorker.ready,
           new Promise((_, reject) =>
-            setTimeout(
-              () =>
-                reject(new Error("Service Worker timeout after 10 seconds")),
-              10000
-            )
+            setTimeout(() => reject(new Error("Service Worker timeout")), 10000)
           ),
         ]);
       }
 
       const vapidKey = this.urlBase64ToUint8Array(this.vapidPublicKey);
 
-      const subscription = await Promise.race([
-        registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: vapidKey,
-        }),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error("Subscription timeout after 8 seconds")),
-            8000
-          )
-        ),
-      ]);
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: vapidKey,
+      });
 
-      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
-      if (!token) {
-        throw new Error(
-          "Token tidak ditemukan. Silakan login terlebih dahulu."
-        );
-      }
+      console.log("Push subscription created:", subscription);
 
       const subscriptionData = {
         endpoint: subscription.endpoint,
@@ -556,7 +552,14 @@ class NotificationSystem {
         },
       };
 
-      console.log("Mengirim subscription data ke server:", subscriptionData);
+      console.log("Subscription data to send:", subscriptionData);
+
+      const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+      if (!token) {
+        throw new Error(
+          "Token tidak ditemukan. Silakan login terlebih dahulu."
+        );
+      }
 
       const response = await fetch(`${this.baseUrl}/notifications/subscribe`, {
         method: "POST",
@@ -568,20 +571,24 @@ class NotificationSystem {
       });
 
       const result = await response.json();
+      console.log("Server response:", result);
 
       if (!response.ok) {
         throw new Error(
-          result.message || `HTTP error! status: ${response.status}`
+          result.message ||
+            `Server error: ${response.status} ${response.statusText}`
         );
       }
-
-      console.log("Server response:", result);
 
       this.isSubscribed = true;
       localStorage.setItem(CONFIG.STORAGE_KEYS.NOTIFICATION_SUBSCRIBED, "true");
       localStorage.setItem(
         CONFIG.STORAGE_KEYS.NOTIFICATION_SUBSCRIPTION,
-        JSON.stringify(subscriptionData)
+        JSON.stringify({
+          ...subscriptionData,
+          subscriptionId: result.data?.id,
+          createdAt: result.data?.createdAt,
+        })
       );
 
       if (loadingDialog) {
@@ -592,17 +599,17 @@ class NotificationSystem {
 
       Swal.fire({
         icon: "success",
-        title: "Notifikasi Diaktifkan!",
-        text: "Anda akan menerima notifikasi untuk update terbaru.",
+        title: "Notifikasi Diaktifkan! 🎉",
+        text: "Anda akan menerima notifikasi untuk story baru dan update lainnya.",
         confirmButtonColor: "#b47eb1",
       });
 
       this.showLocalNotification(
         "Notifikasi Aktif! 🎉",
-        "Anda akan mendapat pemberitahuan untuk aktivitas baru."
+        "Anda akan mendapat pemberitahuan untuk aktivitas baru di Story Me."
       );
     } catch (error) {
-      console.error("Error subscribing:", error);
+      console.error("Error subscribing to push notifications:", error);
 
       if (loadingDialog) {
         Swal.close();
@@ -624,14 +631,15 @@ class NotificationSystem {
           "Notifikasi ditolak oleh browser. Periksa pengaturan situs.";
       } else if (error.name === "NotSupportedError") {
         errorMessage = "Browser tidak mendukung push notifications.";
-      } else if (error.message.includes("HTTP error")) {
+      } else if (error.message.includes("Server error")) {
         errorMessage = `Server error: ${error.message}`;
       }
 
       Swal.fire({
         icon: "error",
-        title: "Gagal Mengaktifkan",
+        title: "Gagal Mengaktifkan Notifikasi",
         text: errorMessage,
+        footer: "Pastikan browser mendukung notifikasi dan coba lagi.",
         confirmButtonColor: "#b47eb1",
       });
     }
@@ -644,7 +652,7 @@ class NotificationSystem {
       loadingDialog = Swal.fire({
         title: "Menonaktifkan Notifikasi...",
         allowOutsideClick: false,
-        timer: 8000,
+        timer: 10000,
         timerProgressBar: true,
         didOpen: () => {
           Swal.showLoading();
@@ -652,14 +660,8 @@ class NotificationSystem {
       });
 
       let registration = this.serviceWorkerRegistration;
-
       if (!registration) {
-        registration = await Promise.race([
-          navigator.serviceWorker.ready,
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Service Worker timeout")), 5000)
-          ),
-        ]);
+        registration = await navigator.serviceWorker.ready;
       }
 
       const subscription = await registration.pushManager.getSubscription();
@@ -668,7 +670,7 @@ class NotificationSystem {
         const token = localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
         if (token) {
           try {
-            console.log("Mengirim unsubscribe request ke server");
+            console.log("Sending unsubscribe request to server");
             const response = await fetch(
               `${this.baseUrl}/notifications/subscribe`,
               {
@@ -684,17 +686,21 @@ class NotificationSystem {
             );
 
             const result = await response.json();
-            console.log("Unsubscribe server response:", result);
+            console.log("Server unsubscribe response:", result);
 
             if (!response.ok) {
-              console.warn("Server unsubscribe failed:", result.message);
+              console.warn("Server unsubscribe warning:", result.message);
             }
           } catch (apiError) {
-            console.warn("API unsubscribe error:", apiError);
+            console.warn(
+              "API unsubscribe error (continuing anyway):",
+              apiError
+            );
           }
         }
 
-        await subscription.unsubscribe();
+        const unsubscribed = await subscription.unsubscribe();
+        console.log("Browser unsubscribe result:", unsubscribed);
       }
 
       this.isSubscribed = false;
@@ -713,11 +719,11 @@ class NotificationSystem {
       Swal.fire({
         icon: "success",
         title: "Notifikasi Dinonaktifkan",
-        text: "Anda tidak akan lagi menerima notifikasi.",
+        text: "Anda tidak akan lagi menerima notifikasi push.",
         confirmButtonColor: "#b47eb1",
       });
     } catch (error) {
-      console.error("Error unsubscribing:", error);
+      console.error("Error unsubscribing from push notifications:", error);
 
       if (loadingDialog) {
         Swal.close();

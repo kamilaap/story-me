@@ -9,6 +9,116 @@ workbox.setConfig({
   debug: false,
 });
 
+self.addEventListener("push", (event) => {
+  console.log("Service worker pushing...", event);
+
+  async function chainPromise() {
+    try {
+      let notificationData = {
+        title: "Story Me",
+        body: "Ada update baru!",
+        icon: "/icon-192x192.png",
+        badge: "/badge-72x72.png",
+        tag: "story-notification",
+        requireInteraction: false,
+        data: { url: "/" },
+      };
+
+      if (event.data) {
+        try {
+          const pushData = event.data.json();
+          console.log("Push data received:", pushData);
+          notificationData = {
+            title: pushData.title || notificationData.title,
+            body:
+              pushData.options?.body || pushData.body || notificationData.body,
+            icon: pushData.options?.icon || notificationData.icon,
+            badge: pushData.options?.badge || notificationData.badge,
+            tag: pushData.options?.tag || notificationData.tag,
+            requireInteraction:
+              pushData.options?.requireInteraction ||
+              notificationData.requireInteraction,
+            data: pushData.options?.data || notificationData.data,
+            actions: pushData.options?.actions || [
+              {
+                action: "open",
+                title: "Buka App",
+              },
+              {
+                action: "close",
+                title: "Tutup",
+              },
+            ],
+          };
+        } catch (parseError) {
+          console.log("Push data bukan JSON, menggunakan text:", parseError);
+          notificationData.body = event.data.text() || notificationData.body;
+        }
+      }
+
+      await self.registration.showNotification(notificationData.title, {
+        body: notificationData.body,
+        icon: notificationData.icon,
+        badge: notificationData.badge,
+        tag: notificationData.tag,
+        requireInteraction: notificationData.requireInteraction,
+        data: notificationData.data,
+        actions: notificationData.actions,
+      });
+
+      console.log("Notification displayed successfully");
+    } catch (error) {
+      console.error("Error handling push notification:", error);
+
+      try {
+        await self.registration.showNotification("Story Me", {
+          body: "Ada notifikasi baru untuk Anda",
+          icon: "/icon-192x192.png",
+          tag: "story-notification-fallback",
+        });
+      } catch (fallbackError) {
+        console.error("Failed to show fallback notification:", fallbackError);
+      }
+    }
+  }
+
+  event.waitUntil(chainPromise());
+});
+
+self.addEventListener("notificationclick", (event) => {
+  console.log("Notification clicked:", event);
+
+  event.notification.close();
+
+  if (event.action === "close") {
+    return;
+  }
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && "focus" in client) {
+            return client.focus();
+          }
+        }
+
+        if (clients.openWindow) {
+          const urlToOpen = event.notification.data?.url || "/";
+          return clients.openWindow(urlToOpen);
+        }
+      })
+      .catch((error) => {
+        console.error("Error handling notification click:", error);
+      })
+  );
+});
+
+self.addEventListener("notificationclose", (event) => {
+  console.log("Notification closed:", event);
+});
+
 workbox.routing.registerRoute(
   ({ url }) =>
     url.pathname.includes("screenshots") ||
@@ -38,14 +148,14 @@ workbox.routing.registerRoute(
         handlerDidError: async ({ request }) => {
           try {
             const cache = await caches.open(CACHE_NAME);
-            const cachedResponse = await cache.match('/offline.html');
+            const cachedResponse = await cache.match("/offline.html");
             if (cachedResponse) {
               return cachedResponse;
             }
           } catch (error) {
             console.warn("Failed to access cache:", error);
           }
-          
+
           return new Response(
             `<!DOCTYPE html>
             <html>
@@ -58,11 +168,11 @@ workbox.routing.registerRoute(
             {
               status: 200,
               statusText: "OK",
-              headers: { "Content-Type": "text/html" }
+              headers: { "Content-Type": "text/html" },
             }
           );
-        }
-      }
+        },
+      },
     ],
   })
 );
@@ -103,7 +213,7 @@ workbox.routing.registerRoute(
             'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><rect width="1" height="1" fill="transparent"/></svg>';
           return new Response(fallbackImage, {
             status: 200,
-            headers: { "Content-Type": "image/svg+xml" }
+            headers: { "Content-Type": "image/svg+xml" },
           });
         },
         requestWillFetch: async ({ request }) => {
@@ -160,13 +270,16 @@ workbox.routing.registerRoute(
       }),
       {
         handlerDidError: async () => {
-          return new Response(JSON.stringify({ error: "Network unavailable" }), {
-            status: 503,
-            statusText: "Service Unavailable",
-            headers: { "Content-Type": "application/json" }
-          });
-        }
-      }
+          return new Response(
+            JSON.stringify({ error: "Network unavailable" }),
+            {
+              status: 503,
+              statusText: "Service Unavailable",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+        },
+      },
     ],
   })
 );
@@ -209,57 +322,6 @@ workbox.routing.registerRoute(
     ],
   })
 );
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    Promise.all([
-      caches.open(CACHE_NAME).then((cache) => {
-        return cache.add("/offline.html").catch((err) => {
-          console.warn("Failed to cache offline.html:", err);
-          return Promise.resolve();
-        });
-      }),
-      self.skipWaiting(),
-    ])
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  const cacheWhitelist = [
-    CACHE_NAME,
-    RUNTIME_CACHE,
-    "map-tiles-v4",
-    "story-me-images-v4",
-    "dicoding-images-v2",
-    "story-me-api-v4",
-  ];
-
-  event.waitUntil(
-    Promise.all([
-      caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (!cacheWhitelist.includes(cacheName)) {
-              return caches.delete(cacheName);
-            }
-            return Promise.resolve();
-          })
-        );
-      }),
-      self.clients.claim(),
-    ])
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  if (
-    !event.request.url.startsWith("http") ||
-    event.request.url.includes("chrome-extension://") ||
-    event.request.url.includes("moz-extension://")
-  ) {
-    return;
-  }
-});
 
 self.addEventListener("unhandledrejection", (event) => {
   console.warn("Unhandled promise rejection in SW:", event.reason);

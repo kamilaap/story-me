@@ -118,8 +118,19 @@ class AuthService {
       localStorage.removeItem(CONFIG.STORAGE_KEYS.TOKEN);
       localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
 
+      localStorage.setItem(
+        CONFIG.STORAGE_KEYS.NOTIFICATION_SUBSCRIBED,
+        "false"
+      );
+      localStorage.removeItem(CONFIG.STORAGE_KEYS.NOTIFICATION_SUBSCRIPTION);
+
       if (CONFIG.STORAGE_KEYS.LAST_STORY) {
         localStorage.removeItem(CONFIG.STORAGE_KEYS.LAST_STORY);
+      }
+
+      if (window.notificationSystem) {
+        window.notificationSystem.isSubscribed = false;
+        window.notificationSystem.updateUI();
       }
 
       console.log("User logged out successfully");
@@ -131,7 +142,10 @@ class AuthService {
       console.error("Error during logout:", error);
     }
   }
-
+  static onAuthChange(callback) {
+    window.addEventListener("auth-success", callback);
+    window.addEventListener("user-logout", callback);
+  }
   static handleLogout(message = "Anda telah logout dengan sukses") {
     try {
       this.logout();
